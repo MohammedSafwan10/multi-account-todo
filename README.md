@@ -35,6 +35,16 @@ AUTH0_AUDIENCE=https://todo-api
 
 `POSTGRES_PASSWORD`, `DJANGO_SECRET_KEY`, and `AUTH0_SECRET` should be random values. Keep `APP_BASE_URL` as `http://localhost:3000` locally.
 
+In the Auth0 application settings, add these local URLs:
+
+```text
+Allowed Callback URLs: http://localhost:3000/auth/callback
+Allowed Logout URLs:   http://localhost:3000
+Allowed Web Origins:   http://localhost:3000
+```
+
+Create an Auth0 API and use its identifier as `AUTH0_AUDIENCE`. The example configuration uses `https://todo-api`.
+
 ## Run locally
 
 Start Docker Desktop, then run this from the project folder:
@@ -44,6 +54,8 @@ Start Docker Desktop, then run this from the project folder:
 ```
 
 This one command starts the frontend, Django backend, and local PostgreSQL database. Keep the terminal open while using the app.
+
+Database migrations run automatically when the backend container starts.
 
 Open http://localhost:3000. Use the Auth0 page to sign up or log in.
 
@@ -81,6 +93,12 @@ DELETE /api/todos/:id/
 ```
 
 The backend gets the current account from the verified Auth0 token. The frontend does not send an account ID.
+
+## Implementation notes
+
+The browser talks to Next.js, and the Next.js API routes forward requests to Django with the Auth0 access token. This keeps the access token on the server side.
+
+Django uses the Auth0 `sub` value to find the local account. Todo queries are always filtered by that account, so changing a Todo ID cannot expose another user's data. PostgreSQL stores the account and Todo relationship.
 
 ## Tests
 
