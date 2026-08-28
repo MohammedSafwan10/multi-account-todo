@@ -39,7 +39,11 @@ export async function getTodos(filter: TodoFilter, search: string): Promise<Todo
     params.set("search", search.trim());
   }
   const query = params.size ? `?${params.toString()}` : "";
-  return request<TodoPage>(`/api/todos${query}`);
+  const response = await request<Todo[] | TodoPage>(`/api/todos${query}`);
+  if (Array.isArray(response)) {
+    return { count: response.length, next: null, previous: null, results: response };
+  }
+  return response;
 }
 
 export function createTodo(data: Pick<Todo, "title" | "description">): Promise<Todo> {
@@ -53,4 +57,3 @@ export function updateTodo(id: number, data: Partial<Pick<Todo, "title" | "descr
 export function deleteTodo(id: number) {
   return request<void>(`/api/todos/${id}`, { method: "DELETE" });
 }
-

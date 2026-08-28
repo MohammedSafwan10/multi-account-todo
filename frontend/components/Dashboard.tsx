@@ -22,6 +22,7 @@ function errorText(error: unknown, fallback: string) {
   if (error instanceof ApiError && error.status === 401) return "Your session ended. Log in again.";
   if (error instanceof ApiError && error.status === 403) return "You do not have access to that task.";
   if (error instanceof ApiError && error.status === 404) return "That task is no longer here.";
+  if (error instanceof ApiError && error.status === 400) return error.message;
   return fallback;
 }
 
@@ -87,6 +88,9 @@ export default function Dashboard({ name, email }: DashboardProps) {
     try {
       const saved = await updateTodo(id, changes);
       setTodos((current) => current.map((todo) => (todo.id === id ? saved : todo)));
+      if ("completed" in changes && filter !== "all") {
+        await load();
+      }
       setNotice("Task saved");
       return true;
     } catch (saveError) {

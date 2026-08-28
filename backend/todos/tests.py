@@ -27,7 +27,7 @@ class TodoApiTests(APITestCase):
         response = self.client.get(reverse("todo-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual([item["id"] for item in response.data["results"]], [self.todo.id])
+        self.assertEqual([item["id"] for item in response.data], [self.todo.id])
 
     def test_create_assigns_ownership_from_the_authenticated_account(self):
         self.authenticate()
@@ -72,4 +72,4 @@ class TodoApiTests(APITestCase):
         response = self.client.get(reverse("todo-list"), {"completed": "true", "search": "Book"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual([item["title"] for item in response.data["results"]], ["Book flights"])
+        self.assertEqual([item["title"] for item in response.data], ["Book flights"])
