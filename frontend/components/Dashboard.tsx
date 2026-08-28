@@ -6,6 +6,7 @@ import { ApiError, createTodo, deleteTodo, getTodos, updateTodo } from "@/lib/ap
 import type { Todo, TodoFilter } from "@/types/todo";
 
 import ErrorMessage from "./ErrorMessage";
+import ConfirmDialog from "./ConfirmDialog";
 import LoadingState from "./LoadingState";
 import TodoForm from "./TodoForm";
 import TodoList from "./TodoList";
@@ -14,6 +15,8 @@ type DashboardProps = {
   name: string;
   email: string;
 };
+
+type Confirmation = { type: "delete"; todo: Todo } | { type: "logout" } | null;
 
 function errorText(error: unknown, fallback: string) {
   if (error instanceof ApiError && error.status === 401) return "Your session ended. Log in again.";
@@ -30,6 +33,7 @@ export default function Dashboard({ name, email }: DashboardProps) {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [confirmation, setConfirmation] = useState<Confirmation>(null);
   const loadVersion = useRef(0);
 
   const load = useCallback(async () => {
@@ -94,7 +98,6 @@ export default function Dashboard({ name, email }: DashboardProps) {
   }
 
   async function remove(todo: Todo) {
-    if (!window.confirm(`Delete "${todo.title}"?`)) return;
     ++loadVersion.current;
     setBusyId(todo.id);
     setError("");
@@ -114,6 +117,10 @@ export default function Dashboard({ name, email }: DashboardProps) {
     }
   }
 
+  function confirmLogout() {
+    window.location.assign("/auth/logout");
+  }
+
   const initials = (name || email || "U")
     .split(/\s+/)
     .map((part) => part[0])
@@ -130,7 +137,9 @@ export default function Dashboard({ name, email }: DashboardProps) {
         <div className="account-menu">
           <span className="avatar">{initials}</span>
           <span className="account-name">{name || email}</span>
-          <a href="/auth/logout">Log out</a>
+          <button className="logout-button" onClick={() => setConfirmation({ type: "logout" })} type="button">
+            Log out
+          </button>
         </div>
       </header>
 
@@ -174,9 +183,39 @@ export default function Dashboard({ name, email }: DashboardProps) {
         {loading ? (
           <LoadingState />
         ) : (
-          <TodoList busyId={busyId} onDelete={remove} onUpdate={update} todos={todos} />
+          <TodoList
+            busyId={busyId}
+            onDelete={(todo) => setConfirmation({ type: "delete", todo })}
+            onUpdate={update}
+            todos={todos}
+          />
         )}
       </section>
+
+      {confirmation?.type === "delete" && (
+        <ConfirmDialog
+          confirmLabel="Delete task"
+          dangerous
+          message={`This will permanently delete “${confirmation.todo.title}”.`}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={() => {
+            const { todo } = confirmation;
+            setConfirmation(null);
+            void remove(todo);
+          }}
+          title="Delete this task?"
+        />
+      )}
+
+      {confirmation?.type === "logout" && (
+        <ConfirmDialog
+          confirmLabel="Log out"
+          message="You can log back in whenever you need to."
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmLogout}
+          title="Log out of Todo List?"
+        />
+      )}
     </main>
   );
 }
