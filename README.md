@@ -53,6 +53,21 @@ To stop it:
 .\stop-dev.cmd
 ```
 
+## View local database (optional)
+
+```powershell
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml exec db psql -U todo_app -d todo_app
+```
+
+Then run:
+
+```sql
+SELECT * FROM accounts_account;
+SELECT * FROM todos_todo;
+```
+
+Use `\q` to exit.
+
 ## API
 
 All Todo routes require login:

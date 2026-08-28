@@ -35,7 +35,9 @@ export async function forwardToDjango(request: Request, path: string) {
       },
     });
 
-    return new Response(await response.arrayBuffer(), {
+    const responseBody = response.status === 204 ? null : await response.arrayBuffer();
+
+    return new Response(responseBody, {
       status: response.status,
       headers: { "Content-Type": response.headers.get("Content-Type") || "application/json" },
     });
@@ -43,4 +45,3 @@ export async function forwardToDjango(request: Request, path: string) {
     return json("Could not reach the API. Try again.", 503);
   }
 }
-
